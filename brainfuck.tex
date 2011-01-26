@@ -1,0 +1,69 @@
+%% init
+\countdef\pointer=0
+\catcode`\[=1
+\catcode`\]=2
+
+\def\init#1{%
+ \count0=0
+ \loop \advance\count0 by 1 \global\count\count0=0 \ifnum\count0<#1 \repeat
+ \global\pointer=1}
+
+\def\apply#1{%
+ \let\next=\apply
+ \if#1>\increment\else
+ \if#1<\decrement\else
+ \if#1+\incrementp\else
+ \if#1-\decrementp\else
+ \if#1.\putbyte\else
+ \if#1,\getbyte\else
+ \if#1@\message{\the\pointer:\the\count\pointer}\else % for debug
+ \if#1!\let\next=\relax\else
+  \dowhile{#1}\let\next=\apply
+ \fi\fi\fi\fi\fi\fi\fi\fi
+ \next}
+
+\long\def\run#1{%
+ \init{255}
+ \apply#1!\relax}
+
+\def\increment{%
+ \global\advance\pointer by 1}
+\def\decrement{%
+ \global\advance\pointer by -1}
+\def\incrementp{%
+ \global\advance\count\pointer by 1}
+\def\decrementp{%
+ \global\advance\count\pointer by -1}
+\def\putbyte{%
+ \ifnum\count\pointer<256
+  \char\count\pointer\fi}
+\def\getbyte{%
+ \read 16 to \getchar
+ \ifx\end\getchar\else
+  \global\count\pointer=\getchar\fi}
+
+\newif\ifinnerloop
+\def\dowhile#1{%
+ \ifnum\count\pointer=0 \relax\else
+  \loop {\apply#1!}%
+    \ifnum\count\pointer=0 \innerloopfalse\else\innerlooptrue\fi
+    \ifinnerloop
+  \repeat
+ \fi}
+
+%% Hello World!
+\run{++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.}
+
+%% 4 times 2
+\run{
+++++>++><<
+[-
+ >[->>+<<]
+ >>[-<+<+>>]
+ <<<
+]>>
+++++++++++++++++++++++++++++++++++++++++++++++++.
+}
+
+\end
+
