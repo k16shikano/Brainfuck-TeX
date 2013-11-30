@@ -1,7 +1,9 @@
 %% init
 \countdef\pointer=0
-\catcode`\[=1
-\catcode`\]=2
+
+\long\gdef\run#1{%
+ \init{255}
+ \apply#1!\relax}
 
 \def\init#1{%
  \count0=0
@@ -10,6 +12,7 @@
 
 \def\apply#1{%
  \let\next=\apply
+ \if#1[\let\next=\sbgroup\else
  \if#1>\increment\else
  \if#1<\decrement\else
  \if#1+\incrementp\else
@@ -18,13 +21,9 @@
  \if#1,\getbyte\else
  \if#1@\message{\the\pointer:\the\count\pointer}\else % for debug
  \if#1!\let\next=\relax\else
-  \dowhile{#1}\let\next=\apply
- \fi\fi\fi\fi\fi\fi\fi\fi
+       \let\next=\apply
+ \fi\fi\fi\fi\fi\fi\fi\fi\fi
  \next}
-
-\long\def\run#1{%
- \init{255}
- \apply#1!\relax}
 
 \def\increment{%
  \global\advance\pointer by 1}
@@ -51,8 +50,30 @@
   \repeat
  \fi}
 
+\countdef\sbcount=100
+\def\sbgroup#1!{%
+ \sbiterrun{#1}%
+ \expandafter\expandafter\expandafter\dowhile\expandafter{\sbgrouped\iffalse}\fi}%
+\def\sbiterrun#1{\sbcount=0%
+ \gdef\sbgrouped{\sbiter #1!}}
+\def\sbiter #1{%
+ \if#1]
+  \ifnum\sbcount=0 \iffalse{\fi}\noexpand\apply \let\next=\relax
+  \else
+  \global\advance\sbcount by -1 ]\let\next=\sbiter
+  \fi
+ \else\if#1[
+  \global\advance\sbcount by 1 [\let\next=\sbiter
+ \else\if#1!
+  \let\next=\relax
+ \else
+  #1\let\next=\sbiter
+ \fi\fi\fi\next}
+
+
 %% Hello World!
 \run{++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.}
+
 
 %% 4 times 2
 %% from http://www.kmonos.net/alang/etc/brainfuck.php
@@ -65,6 +86,12 @@
 ]>>
 ++++++++++++++++++++++++++++++++++++++++++++++++.
 }
+
+
+\run{
+>+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.[-]>++++++++[<++++>-]<.>+++++++++++[<+++++>-]<.>++++++++[<+++>-]<.+++.------.--------.[-]>++++++++[<++++>-]<+.[-]+++++++++.
+}
+
 
 \end
 
